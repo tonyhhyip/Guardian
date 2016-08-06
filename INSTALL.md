@@ -36,19 +36,28 @@ sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install -y php5-fpm nginx postgresql-9.4 openjdk-7-jre
+sudo apt-get install -y php5-fpm nginx postgresql-9.5 openjdk-7-jre
 ```
 
 ##### Ubuntu 16.04
 
-Ubuntu 16.04 provides PHP 5.5 and PostgreSQL 9.4 by default. You don't need to
+Ubuntu 16.04 provides PHP 5.5 and PostgreSQL 9.5 by default. You don't need to
 use PPA anymore.
 
 ```
 sudo apt-get update
-sudo apt-get install -y php5-fpm nginx postgresql-9.4 openjdk-7-jre
+sudo apt-get install -y php7-fpm nginx postgresql-9.5 openjdk-7-jre
 ```
 
+Only PHP 7 is provided in 16.04, you may use ppa `ondrej/php5-5.6` to have php5.
+
+```
+sudo add-apt-repository -y ppa:ondrej/php5-5.6
+sudo apt-get update
+sudo apt-get install -y php5-fpm
+```
+
+Also OpenJDK 8 is also available, replace `openjdk-7-jre` with `openjdk-8-jre` to use OpenJDK 8.
 
 ### 2. Create and Configure PostgreSQL database
 Find out your PostgreSQL superuser (It is usually `postgres`

@@ -7,4 +7,8 @@ Route::group([
     Route::resource('branches', 'BranchController', [
         'only' => ['index', 'store', 'update', 'destroy']
     ]);
+
+    Route::resource('locations', 'LocationController', [
+        'only' => ['index', 'store', 'update', 'destroy']
+    ]);
 });

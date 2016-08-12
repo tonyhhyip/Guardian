@@ -14,4 +14,9 @@ class Request extends FormRequest
         return $this->isJson() ? $this->json() : $this->request;
     }
 
+    public function wantsJson()
+    {
+        return true;
+    }
+
 }

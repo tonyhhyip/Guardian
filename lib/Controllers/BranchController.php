@@ -2,12 +2,11 @@
 
 namespace Guardian\Controllers;
 
+use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Facades\Log;
 use Guardian\Models\Branch;
 use Guardian\Requests\Branch\UpdateRequest;
 use Guardian\Requests\Branch\CreateRequest;
-use Ramsey\Uuid\Uuid;
 
 class BranchController extends Controller {
 
@@ -23,19 +22,20 @@ class BranchController extends Controller {
         return response()->json($content);
     }
 
+    /**
+     * @param CreateRequest $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(CreateRequest $request) {
         try {
             $branch = Branch::create($request->getForm()->all());
             $branch->save();
-            $content = ['result' => 'success'];
-            $status = 201;
-        } catch (\Exception $e) {
-            $content = ['result' => 'failed'];
-            $status = 500;
-            Log::error($e);
+            return $this->getCreatedResponse();
+        } catch (\PDOException $e) {
+            $this->logger->error($e);
+            return $this->getFailedResponse();
         }
-
-        return response()->json($content)->setStatusCode($status);
     }
 
     /**
@@ -46,22 +46,21 @@ class BranchController extends Controller {
      */
     public function update($branch, UpdateRequest $request)
     {
-        if (!Uuid::isValid($branch)) {
-            return response()->json(['result' => 'failed'])->setStatusCode(422);
-        }
-
         try {
+            if (!Uuid::isValid($branch)) {
+                return $this->getInvalidResponse();
+            }
+
             $instance = Branch::findOrFail($branch);
+            foreach ($request->getForm()->all() as $key => $value) {
+                $instance->setAttribute($key, $value);
+            }
+            $instance->save();
+            return $this->getSuccessResponse();
         } catch (ModelNotFoundException $e) {
-            return response(['result' => 'failed'])->setStatusCode(404);
+            $this->logger->error($e);
+            return $this->getNotFoundResponse();
         }
-
-        foreach ($request->getForm()->all() as $key => $value) {
-            $instance->setAttribute($key, $value);
-        }
-        $instance->save();
-
-        return response()->json(['result' => 'success']);
     }
 
     /**
@@ -71,15 +70,16 @@ class BranchController extends Controller {
      */
     public function destroy($branch)
     {
-        if (!Uuid::isValid($branch)) {
-            return response()->json(['result' => 'failed'])->setStatusCode(422);
-        }
-
         try {
+            if (!Uuid::isValid($branch)) {
+                return $this->getInvalidResponse();
+            }
+
             Branch::findOrFail($branch)->delete();
-            return response()->json(['result' => 'success']);
+            return $this->getSuccessResponse();
         } catch (ModelNotFoundException $e) {
-            return response()->json(['result' => 'failed'])->setStatusCode(404);
+            $this->logger->error($e);
+            return $this->getNotFoundResponse();
         }
     }
 

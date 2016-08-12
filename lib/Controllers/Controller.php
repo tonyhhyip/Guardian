@@ -38,4 +38,9 @@ abstract class Controller extends BaseController
     {
         return response()->json(['result' => 'failed'], 500);
     }
+
+    protected function getNotFoundResponse()
+    {
+        return response()->json(['result' => 'failed'], 404);
+    }
 }

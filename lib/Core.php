@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Guardian\Models\Config;
 
 
-class Core {
+abstract class Core {
 
     /**
      * @param string $name

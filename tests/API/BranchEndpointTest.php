@@ -12,8 +12,7 @@ class BranchEndpointTest extends \TestCase
     public function testListing()
     {
         $this->get('/api/v1/branches');
-        $response = $this->response;
-        $this->assertEquals(200, $response->status());
+        $this->assertResponseOk();
         $content = $this->shouldBeJsonEndpoint();
         $this->assertTrue(isset($content['data']));
         $this->assertTrue(isset($content['result']));
@@ -26,8 +25,8 @@ class BranchEndpointTest extends \TestCase
             'name' => 'Testing',
             'foo' => 'bar'
         ];
-        $response = $this->json('POST', '/api/v1/branches', $data);
-        $this->assertEquals(201, $response->status());
+        $this->json('POST', '/api/v1/branches', $data);
+        $this->assertResponseStatus(201);
         $this->shouldBeJsonEndpoint();
         $this->seeInDatabase('branches', ['name' => 'Testing']);
     }
@@ -35,14 +34,13 @@ class BranchEndpointTest extends \TestCase
     public function testEmptyAdding()
     {
         $this->json('POST', '/api/v1/branches', []);
-        $response = $this->response;
         $this->shouldBeJsonEndpoint();
-        $this->assertEquals(422, $response->status());
+        $this->assertResponseStatus(422);
     }
 
     public function testExistsBranch()
     {
-        $this->get('/api/v1/branches');
+        $this->json('GET', '/api/v1/branches');
         $content = $this->shouldBeJsonEndpoint();
         $this->assertTrue(isset($content['data']));
         $this->assertTrue(isset($content['result']));
@@ -62,7 +60,7 @@ class BranchEndpointTest extends \TestCase
         $param = ['name' => 'Test'];
         $response = $this->json('PUT', $url, $param);
         $this->shouldBeJsonEndpoint();
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertResponseOk();
         return $data;
     }
 
@@ -70,9 +68,9 @@ class BranchEndpointTest extends \TestCase
     {
         $url = sprintf('/api/v1/branches/%s', '0000-0000');
         $data = ['name' => 'Test'];
-        $response = $this->json('PUT', $url, $data);
+        $this->json('PUT', $url, $data);
         $this->shouldBeJsonEndpoint();
-        $this->assertEquals(422, $response->getStatusCode());
+        $this->assertResponseStatus(422);
     }
 
     public function testUpdateNotExists()
@@ -97,7 +95,7 @@ class BranchEndpointTest extends \TestCase
         $url = sprintf('/api/v1/branches/%s', '0000-0000');
         $response = $this->json('DELETE', $url);
         $this->shouldBeJsonEndpoint();
-        $this->assertEquals(422, $response->getStatusCode());
+        $this->assertResponseStatus(422);
     }
 
     /**
@@ -107,8 +105,8 @@ class BranchEndpointTest extends \TestCase
     public function testDelete(array $data)
     {
         $url = sprintf('/api/v1/branches/%s', $data['id']);
-        $response = $this->json('DELETE', $url);
+        $this->json('DELETE', $url);
         $this->shouldBeJsonEndpoint();
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertResponseOk();
     }
 }

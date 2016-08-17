@@ -70,17 +70,13 @@ class BranchController extends Controller {
      */
     public function destroy($branch)
     {
-        try {
-            if (!Uuid::isValid($branch)) {
-                return $this->getInvalidResponse();
-            }
-
-            Branch::findOrFail($branch)->delete();
-            return $this->getSuccessResponse();
-        } catch (ModelNotFoundException $e) {
-            $this->logger->error($e);
-            return $this->getNotFoundResponse();
+        if (!Uuid::isValid($branch)) {
+            return $this->getInvalidResponse();
         }
+
+        Branch::destroy($branch);
+        return $this->getSuccessResponse();
+
     }
 
 }

@@ -27,15 +27,11 @@ class PatronController extends Controller {
         try {
             $patron = Patron::create($request->getForm()->all());
             $patron->save();
-            $content = ['result' => 'success'];
-            $status = 201;
+            return $this->getCreatedResponse();
         } catch (\Exception $e) {
-            $content = ['result' => 'failed'];
-            $status = 500;
-            Log::error($e);
+            $this->logger->error($e);
+            return $this->getFailedResponse();
         }
-
-        return response()->json($content)->setStatusCode($status);
     }
 
     /**
@@ -47,13 +43,13 @@ class PatronController extends Controller {
     public function update($patron, UpdateRequest $request)
     {
         if (!Uuid::isValid($patron)) {
-            return response()->json(['result' => 'failed'])->setStatusCode(422);
+            return $this->getInvalidResponse();
         }
 
         try {
             $instance = Patron::findOrFail($patron);
         } catch (ModelNotFoundException $e) {
-            return response(['result' => 'failed'])->setStatusCode(404);
+            return $this->getNotFoundResponse();
         }
 
         foreach ($request->getForm()->all() as $key => $value) {
@@ -61,7 +57,7 @@ class PatronController extends Controller {
         }
         $instance->save();
 
-        return response()->json(['result' => 'success']);
+        return $this->getSuccessResponse();
     }
 
     /**
@@ -75,12 +71,8 @@ class PatronController extends Controller {
             return response()->json(['result' => 'failed'])->setStatusCode(422);
         }
 
-        try {
-            Patron::findOrFail($patron)->delete();
-            return response()->json(['result' => 'success']);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['result' => 'failed'])->setStatusCode(404);
-        }
+        Patron::destroy($patron);
+        return $this->getSuccessResponse();
     }
 
 }

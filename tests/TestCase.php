@@ -26,6 +26,14 @@ class TestCase extends BaseTestCase
         return $app;
     }
 
+    protected function getJSON()
+    {
+        $content = json_decode($this->response->getContent(), true);
+        $this->assertEquals(JSON_ERROR_NONE, json_last_error());
+        $this->assertTrue($content !== false);
+        return $content;
+    }
+
     /**
      * Check endpoint response is JSON Response
      *
@@ -36,10 +44,7 @@ class TestCase extends BaseTestCase
         $response = $this->response;
         $this->assertInstanceOf(Response::class, $response);
         $this->assertEquals('application/json', $response->headers->get('content-type'));
-        $content = json_decode($response->content(), true);
-        $this->assertEquals(json_last_error(), JSON_ERROR_NONE);
-        $this->assertTrue($content !== false);
-        return $content;
+        return $this->getJSON();
     }
 
     /**
@@ -54,5 +59,18 @@ class TestCase extends BaseTestCase
     {
         parent::json($method, $uri, $data, $headers);
         return $this->response;
+    }
+
+    protected function seeJsonKey($keys)
+    {
+        $keys = func_num_args() === 1 ? $keys : func_get_args();
+        if (!is_array($keys)) {
+            $keys = [$keys];
+        }
+
+        $content = $this->getJSON();
+
+        foreach ($keys as $key)
+            $this->assertArrayHasKey($key, $content);
     }
 }

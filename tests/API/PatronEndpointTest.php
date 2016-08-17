@@ -8,12 +8,11 @@ use Guardian\Models\Branch;
 class PatronEndpointTest extends \TestCase
 {
 
-    private function str_random() {
-        static $_str;
-        if (!isset($_str)) {
-            $_str = str_random(6);
-        }
-        return $_str;
+    private static $str;
+
+    public static function setUpBeforeClass()
+    {
+        static::$str = str_random(6);
     }
 
     /**
@@ -22,29 +21,27 @@ class PatronEndpointTest extends \TestCase
     public function testListing()
     {
         $this->get('/api/v1/patrons');
-        $response = $this->response;
-        $this->assertEquals(200, $response->status());
-        $content = $this->shouldBeJsonEndpoint();
-        $this->assertTrue(isset($content['data']));
-        $this->assertTrue(isset($content['result']));
-        $this->assertEquals('success', $content['result']);
+        $this->assertResponseOk();
+        $this->shouldBeJsonEndpoint();
+        $this->seeJsonKey('data', 'result');
+        $this->seeJson(['result' => 'success']);
     }
 
     public function testAddingPatron()
     {
-        $branch_id = Uuid::uuid4()->toString();
-        $branch = new Branch;
-        $branch->id = $branch_id;
-        $branch->name = 'Branch '.$this->str_random();
-        $branch->save();
+        $branch = Uuid::uuid4()->toString();
+        Branch::create([
+            'id' => $branch,
+            'name' => 'Branch ' . static::$str
+        ]);
 
         $data = [
-            'library_card_number' => 'CARD-'.$this->str_random(),
-            'name' => 'Reader '.$this->str_random(),
-            'birthday' => date("Y-m-d H:i:s",rand(1262055681,1262055681)),
-            'branch_id' => $branch_id,
+            'library_card_number' => 'CARD-' . static::$str,
+            'name' => 'Reader ' . static::$str,
+            'birthday' => date("Y-m-d H:i:s", rand(1262055681, 1262055681)),
+            'branch_id' => $branch,
         ];
-        $response = $this->json('POST', '/api/v1/patrons', $data);
+        $this->json('POST', '/api/v1/patrons', $data);
         $this->assertResponseStatus(201);
         $this->shouldBeJsonEndpoint();
         $this->seeInDatabase('patrons', $data);
@@ -53,7 +50,6 @@ class PatronEndpointTest extends \TestCase
     public function testEmptyAdding()
     {
         $this->json('POST', '/api/v1/patrons', []);
-        $response = $this->response;
         $this->shouldBeJsonEndpoint();
         $this->assertResponseStatus(422);
     }
@@ -62,11 +58,10 @@ class PatronEndpointTest extends \TestCase
     {
         $this->get('/api/v1/patrons');
         $content = $this->shouldBeJsonEndpoint();
-        $this->assertTrue(isset($content['data']));
-        $this->assertTrue(isset($content['result']));
-        $this->assertTrue(sizeof($content['data']) > 0);
+        $this->seeJsonKey('data', 'result');
+        $this->assertGreaterThan(0, count($content['data']));
         $data = $content['data'][0];
-        $this->assertEquals('Reader '.$this->str_random(), $data['name']);
+        $this->assertEquals('Reader ' . static::$str, $data['name']);
         return $data;
     }
 
@@ -79,23 +74,22 @@ class PatronEndpointTest extends \TestCase
     {
         $url = sprintf('/api/v1/patrons/%s', $data['id']);
         $param = [
-            'library_card_number' => 'CARD-'.$this->str_random().'(Updated)',
-            'name' => 'Reader '.$this->str_random().'(Updated)',
-            'birthday' => date("Y-m-d H:i:s",rand(1262055681,1262055681)),
+            'library_card_number' => 'CARD-'.static::$str.'(Updated)',
+            'name' => 'Reader '.static::$str.'(Updated)',
+            'birthday' => date("Y-m-d H:i:s", rand(1262055681, 1262055681)),
             'branch_id' => $data['branch_id'],
         ];
-        $response = $this->json('PUT', $url, $param);
+        $this->json('PUT', $url, $param);
         $this->shouldBeJsonEndpoint();
-        $this->assertResponseStatus(200);
+        $this->assertResponseOk();
         return $data;
     }
 
     public function testUpdateInvalidFormat()
     {
         $url = sprintf('/api/v1/patrons/%s', '0000-0000');
-        $data = ['name' => 'Test'
-        ];
-        $response = $this->json('PUT', $url, $data);
+        $data = ['name' => 'Test'];
+        $this->json('PUT', $url, $data);
         $this->shouldBeJsonEndpoint();
         $this->assertResponseStatus(422);
     }
@@ -104,12 +98,12 @@ class PatronEndpointTest extends \TestCase
     {
         $url = sprintf('/api/v1/patrons/%s', Uuid::NIL);
         $data = [
-          'library_card_number' => 'CARD-'.$this->str_random().'(Updated)',
-          'name' => 'Reader '.$this->str_random().'(Updated)',
-          'birthday' => date("Y-m-d H:i:s",rand(1262055681,1262055681)),
+          'library_card_number' => 'CARD-'.static::$str.'(Updated)',
+          'name' => 'Reader '.static::$str.'(Updated)',
+          'birthday' => date("Y-m-d H:i:s", rand(1262055681,1262055681)),
           'branch_id' => Uuid::uuid4()->toString(),
         ];
-        $response = $this->json('PUT', $url, $data);
+        $this->json('PUT', $url, $data);
         $this->shouldBeJsonEndpoint();
         $this->assertResponseStatus(404);
     }
@@ -117,15 +111,15 @@ class PatronEndpointTest extends \TestCase
     public function testDeleteNotExists()
     {
         $url = sprintf('/api/v1/patrons/%s', Uuid::NIL);
-        $response = $this->json('DELETE', $url);
+        $this->json('DELETE', $url);
         $this->shouldBeJsonEndpoint();
-        $this->assertResponseStatus(404);
+        $this->assertResponseOk();
     }
 
     public function testDeleteInvalid()
     {
         $url = sprintf('/api/v1/patrons/%s', '0000-0000');
-        $response = $this->json('DELETE', $url);
+        $this->json('DELETE', $url);
         $this->shouldBeJsonEndpoint();
         $this->assertResponseStatus(422);
     }
@@ -137,7 +131,7 @@ class PatronEndpointTest extends \TestCase
     public function testDelete(array $data)
     {
         $url = sprintf('/api/v1/patrons/%s', $data['id']);
-        $response = $this->json('DELETE', $url);
+        $this->json('DELETE', $url);
         $this->shouldBeJsonEndpoint();
         $this->assertResponseStatus(200);
     }

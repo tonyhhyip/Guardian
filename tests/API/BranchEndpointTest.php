@@ -13,9 +13,8 @@ class BranchEndpointTest extends \TestCase
     {
         $this->get('/api/v1/branches');
         $this->assertResponseOk();
-        $content = $this->shouldBeJsonEndpoint();
-        $this->assertArrayHasKey('data', $content);
-        $this->assertArrayHasKey('result', $content);
+        $this->shouldBeJsonEndpoint();
+        $this->seeJsonKey('data', 'result');
         $this->seeJson(['result' => 'success']);
     }
 
@@ -42,8 +41,7 @@ class BranchEndpointTest extends \TestCase
     {
         $this->json('GET', '/api/v1/branches');
         $content = $this->shouldBeJsonEndpoint();
-        $this->assertArrayHasKey('data', $content);
-        $this->assertArrayHasKey('result', $content);
+        $this->seeJsonKey('data', 'result');
         $this->seeJson(['result' => 'success']);
         $data = $content['data'][0];
         $this->assertEquals('Testing', $data['name']);

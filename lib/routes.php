@@ -9,6 +9,10 @@ Route::group([
     ]);
 
     Route::resource('locations', 'LocationController', [
+    'only' => ['index', 'store', 'update', 'destroy']
+    ]);
+
+    Route::resource('patrons', 'PatronController', [
         'only' => ['index', 'store', 'update', 'destroy']
     ]);
 });

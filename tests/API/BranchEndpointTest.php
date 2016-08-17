@@ -14,9 +14,9 @@ class BranchEndpointTest extends \TestCase
         $this->get('/api/v1/branches');
         $this->assertResponseOk();
         $content = $this->shouldBeJsonEndpoint();
-        $this->assertTrue(isset($content['data']));
-        $this->assertTrue(isset($content['result']));
-        $this->assertEquals('success', $content['result']);
+        $this->assertArrayHasKey('data', $content);
+        $this->assertArrayHasKey('result', $content);
+        $this->seeJson(['result' => 'success']);
     }
 
     public function testAddingBranch()
@@ -33,7 +33,7 @@ class BranchEndpointTest extends \TestCase
 
     public function testEmptyAdding()
     {
-        $this->json('POST', '/api/v1/branches', []);
+        $this->json('POST', '/api/v1/branches');
         $this->shouldBeJsonEndpoint();
         $this->assertResponseStatus(422);
     }
@@ -42,8 +42,9 @@ class BranchEndpointTest extends \TestCase
     {
         $this->json('GET', '/api/v1/branches');
         $content = $this->shouldBeJsonEndpoint();
-        $this->assertTrue(isset($content['data']));
-        $this->assertTrue(isset($content['result']));
+        $this->assertArrayHasKey('data', $content);
+        $this->assertArrayHasKey('result', $content);
+        $this->seeJson(['result' => 'success']);
         $data = $content['data'][0];
         $this->assertEquals('Testing', $data['name']);
         return $data;
@@ -58,7 +59,7 @@ class BranchEndpointTest extends \TestCase
     {
         $url = sprintf('/api/v1/branches/%s', $data['id']);
         $param = ['name' => 'Test'];
-        $response = $this->json('PUT', $url, $param);
+        $this->json('PUT', $url, $param);
         $this->shouldBeJsonEndpoint();
         $this->assertResponseOk();
         return $data;
@@ -77,23 +78,23 @@ class BranchEndpointTest extends \TestCase
     {
         $url = sprintf('/api/v1/branches/%s', Uuid::NIL);
         $data = ['name' => 'Test'];
-        $response = $this->json('PUT', $url, $data);
+        $this->json('PUT', $url, $data);
         $this->shouldBeJsonEndpoint();
-        $this->assertEquals(404, $response->getStatusCode());
+        $this->assertResponseStatus(404);
     }
 
     public function testDeleteNotExists()
     {
         $url = sprintf('/api/v1/branches/%s', Uuid::NIL);
-        $response = $this->json('DELETE', $url);
+        $this->json('DELETE', $url);
         $this->shouldBeJsonEndpoint();
-        $this->assertEquals(404, $response->getStatusCode());
+        $this->assertResponseOk();
     }
 
     public function testDeleteInvalid()
     {
         $url = sprintf('/api/v1/branches/%s', '0000-0000');
-        $response = $this->json('DELETE', $url);
+        $this->json('DELETE', $url);
         $this->shouldBeJsonEndpoint();
         $this->assertResponseStatus(422);
     }
